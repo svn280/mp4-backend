@@ -117,9 +117,23 @@ def insert_data_into_db(payload):
     NOTE: Our autograder will automatically insert data into the DB automatically keeping in mind the explained SCHEMA, you dont have to insert your own data.
     """
     create_db_table()
-    # TODO: Implement the database call    
+    try:
+        with get_db_connection() as connection:
+            with connection.cursor() as cursor:
+                insert_data = """
+                  INSERT into events (title, description, image_url, date, location) 
+                  VALUES (%s, %s, %s, %s, %s)
+                """
+                val = (payload['title'], payload.get['description', ''], 
+                       payload.get['image_url', ''], payload.get['date', ''], 
+                       payload.get['location', ''])
+                cursor.execute(insert_data, val)
+            connection.commit()
+            logging.info("Inserted data into table")
+    except Exception as e:
+        logging.exception("Failed to insert data")
+        raise RuntimeError(f"Table creation failed: {str(e)}")   
     
-    raise NotImplementedError("Database insert function not implemented.")
 
 #Database Function Stub
 def fetch_data_from_db():
@@ -128,8 +142,18 @@ def fetch_data_from_db():
     Implement this function to fetch your data from the database.
     """
     # TODO: Implement the database call
-    
-    raise NotImplementedError("Database fetch function not implemented.")
+    create_db_table()
+    try:
+        with get_db_connection() as connection:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                select_data = "SELECT * FROM events ORDER BY date ASC"
+                cursor.execute(select_data)
+                result = cursor.fetchall()
+            logging.info("Selected data table")
+    except Exception as e:
+        logging.exception("Failed to select data")
+        raise RuntimeError(f"Table selection failed: {str(e)}")   
+    return result
 
 if __name__ == '__main__':
     application.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
