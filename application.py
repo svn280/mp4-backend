@@ -91,21 +91,20 @@ def get_db_connection():
 def create_db_table():
     connection = get_db_connection()
     try:
-        with get_db_connection() as connection:
-            with connection.cursor() as cursor:
-                create_table_sql = """
-                CREATE TABLE IF NOT EXISTS events (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    title VARCHAR(255) NOT NULL,
-                    description TEXT,
-                    image_url VARCHAR(255),
-                    date DATE NOT NULL,
-                    location VARCHAR(255)
-                )
-                """
-                cursor.execute(create_table_sql)
-            connection.commit()
-            logging.info("Events table created or already exists")
+        with connection.cursor() as cursor:
+            create_table_sql = """
+            CREATE TABLE IF NOT EXISTS events (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                description TEXT,
+                image_url VARCHAR(255),
+                date DATE NOT NULL,
+                location VARCHAR(255)
+            )
+            """
+            cursor.execute(create_table_sql)
+        connection.commit()
+        logging.info("Events table created or already exists")
     except Exception as e:
         logging.exception("Failed to create or verify the events table")
         raise RuntimeError(f"Table creation failed: {str(e)}")
@@ -117,19 +116,19 @@ def insert_data_into_db(payload):
     NOTE: Our autograder will automatically insert data into the DB automatically keeping in mind the explained SCHEMA, you dont have to insert your own data.
     """
     create_db_table()
+    connection = get_db_connection()
     try:
-        with get_db_connection() as connection:
-            with connection.cursor() as cursor:
-                insert_data = """
-                  INSERT into events (title, description, image_url, date, location) 
-                  VALUES (%s, %s, %s, %s, %s)
-                """
-                val = (payload['title'], payload.get['description', ''], 
-                       payload.get['image_url', ''], payload.get['date', ''], 
-                       payload.get['location', ''])
-                cursor.execute(insert_data, val)
-            connection.commit()
-            logging.info("Inserted data into table")
+        with connection.cursor() as cursor:
+            insert_data = """
+                INSERT into events (title, description, image_url, date, location) 
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            val = (payload['title'], payload.get('description', ''), 
+                    payload.get('image_url', ''), payload['date'], 
+                    payload.get('location', ''))
+            cursor.execute(insert_data, val)
+        connection.commit()
+        logging.info("Inserted data into table")
     except Exception as e:
         logging.exception("Failed to insert data")
         raise RuntimeError(f"Table creation failed: {str(e)}")   
@@ -143,12 +142,12 @@ def fetch_data_from_db():
     """
     # TODO: Implement the database call
     create_db_table()
+    connection = get_db_connection()
     try:
-        with get_db_connection() as connection:
-            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-                select_data = "SELECT * FROM events ORDER BY date ASC"
-                cursor.execute(select_data)
-                result = cursor.fetchall()
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            select_data = "SELECT * FROM events ORDER BY date ASC"
+            cursor.execute(select_data)
+            result = cursor.fetchall()
             logging.info("Selected data table")
     except Exception as e:
         logging.exception("Failed to select data")
